@@ -3,336 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>신니의 홈피 - 고릴라 게임</title>
+  <title>신니의 게임 홈피</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #4a8c2a;
-      overflow: hidden;
-      height: 100vh;
-      width: 100vw;
-    }
-
-    #hud {
-      position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      z-index: 100;
-    }
-
-    #score {
-      font-size: 2em;
-      font-weight: bold;
-      color: white;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
-    }
-
-    #power-timer {
-      font-size: 1.1em;
-      color: #ffe44d;
-      text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
-      display: none;
-      margin-top: 4px;
-    }
-
-    #gorilla {
-      position: fixed;
-      font-size: 2.5em;
-      user-select: none;
-      z-index: 10;
-      transition: font-size 0.3s ease;
-    }
-
-    #gorilla.powered {
-      font-size: 5em;
-    }
-
-    .banana {
-      position: fixed;
-      font-size: 2em;
-      user-select: none;
-      z-index: 10;
-    }
-
-    .banana.red {
-      filter: hue-rotate(300deg) saturate(4) brightness(1.1);
-      animation: pulse 0.7s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.3); }
-    }
-
-    .lion {
-      position: fixed;
-      font-size: 2.5em;
-      user-select: none;
-      z-index: 10;
-    }
-
-    #overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 200;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-    }
-
-    #overlay.show { display: flex; }
-
-    #message-box {
-      background: rgba(0,0,0,0.9);
+      font-family: 'Segoe UI', sans-serif;
       color: white;
-      font-size: 1.8em;
-      padding: 40px 60px;
-      border-radius: 20px;
-      text-align: center;
-      line-height: 1.8;
     }
+
+    header {
+      margin-top: 60px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 3em;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(255,255,255,0.4);
+    }
+
+    header p {
+      margin-top: 10px;
+      font-size: 1.1em;
+      color: #aaa;
+    }
+
+    .cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      margin-top: 60px;
+      padding: 0 24px 60px;
+    }
+
+    .card {
+      width: 260px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 36px 24px 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: white;
+      display: block;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      background: rgba(255,255,255,0.14);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    }
+
+    .card .icon {
+      font-size: 4em;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .card h2 {
+      font-size: 1.4em;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      font-size: 0.9em;
+      color: #bbb;
+      line-height: 1.5;
+    }
+
+    .card .badge {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.75em;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .badge.ready  { background: #2ecc71; color: #000; }
+    .badge.coming { background: #555;    color: #ccc; }
   </style>
 </head>
 <body>
 
-  <div id="hud">
-    <div id="score">점수: 0</div>
-    <div id="power-timer">⚡ 파워업! <span id="countdown">10</span>초</div>
+  <header>
+    <h1>🎮 신니의 게임 홈피</h1>
+    <p>플레이하고 싶은 게임을 선택하세요</p>
+  </header>
+
+  <div class="cards">
+
+    <a class="card" href="gorilla.html">
+      <span class="icon">🦍</span>
+      <h2>고릴라 바나나</h2>
+      <p>방향키로 고릴라를 움직여 바나나를 모두 수집하세요. 사자를 조심!</p>
+      <span class="badge ready">PLAY</span>
+    </a>
+
+    <a class="card" href="breakout.html">
+      <span class="icon">🧱</span>
+      <h2>벽돌깨기</h2>
+      <p>클래식 벽돌깨기 게임. 공을 튕겨서 모든 벽돌을 부숴보세요!</p>
+      <span class="badge coming">COMING SOON</span>
+    </a>
+
   </div>
 
-  <div id="gorilla">🦍</div>
-
-  <div id="overlay">
-    <div id="message-box"></div>
-  </div>
-
-  <script>
-    const gorillaEl   = document.getElementById('gorilla');
-    const scoreEl     = document.getElementById('score');
-    const powerTimerEl = document.getElementById('power-timer');
-    const countdownEl = document.getElementById('countdown');
-    const overlay     = document.getElementById('overlay');
-    const messageBox  = document.getElementById('message-box');
-
-    const SPEED       = 8;
-    const LION_SPEED  = 1.8;
-
-    let gx = 60, gy = window.innerHeight - 80;
-    let score = 0;
-    let paused = false;
-    let powered = false;
-    let powerTimeout = null;
-    let powerInterval = null;
-
-    const bananas = [];
-    const lions   = [];
-    const keys    = {};
-
-    // ── 초기 배치 ──────────────────────────────────────────
-    function init() {
-      paused  = false;
-      score   = 0;
-      powered = false;
-      gx = 60; gy = window.innerHeight - 80;
-      gorillaEl.style.left = gx + 'px';
-      gorillaEl.style.top  = gy + 'px';
-      gorillaEl.classList.remove('powered');
-      scoreEl.textContent = '점수: 0';
-      powerTimerEl.style.display = 'none';
-      clearTimeout(powerTimeout);
-      clearInterval(powerInterval);
-      overlay.classList.remove('show');
-      spawnBananas();
-      resetLions();
-    }
-
-    // ── 바나나 ─────────────────────────────────────────────
-    function spawnBananas() {
-      bananas.forEach(b => b.el.remove());
-      bananas.length = 0;
-
-      const count = Math.floor(Math.random() * 6) + 5;
-      for (let i = 0; i < count; i++) addBanana(false);
-      addBanana(true); // 빨간 바나나 1개
-    }
-
-    function addBanana(isRed) {
-      const el = document.createElement('div');
-      el.className = 'banana' + (isRed ? ' red' : '');
-      el.textContent = '🍌';
-      let bx, by;
-      do {
-        bx = Math.random() * (window.innerWidth  - 80) + 20;
-        by = Math.random() * (window.innerHeight - 130) + 80;
-      } while (Math.hypot(bx - gx, by - gy) < 120);
-      el.style.left = bx + 'px';
-      el.style.top  = by + 'px';
-      document.body.appendChild(el);
-      bananas.push({ el, x: bx, y: by, isRed });
-    }
-
-    // ── 사자 ───────────────────────────────────────────────
-    function resetLions() {
-      lions.forEach(l => { clearTimeout(l.respawnTimeout); l.el.remove(); });
-      lions.length = 0;
-      for (let i = 0; i < 2; i++) {
-        const el = document.createElement('div');
-        el.className = 'lion';
-        el.textContent = '🦁';
-        document.body.appendChild(el);
-        const lion = { el, x: 0, y: 0, dead: false, respawnTimeout: null };
-        lions.push(lion);
-        placeLionAtEdge(lion);
-      }
-    }
-
-    function placeLionAtEdge(lion) {
-      const edge = Math.floor(Math.random() * 4);
-      let lx, ly;
-      if      (edge === 0) { lx = 0;                       ly = Math.random() * window.innerHeight; }
-      else if (edge === 1) { lx = window.innerWidth  - 50; ly = Math.random() * window.innerHeight; }
-      else if (edge === 2) { lx = Math.random() * window.innerWidth; ly = 0; }
-      else                 { lx = Math.random() * window.innerWidth; ly = window.innerHeight - 55; }
-      lion.x = lx; lion.y = ly;
-      lion.dead = false;
-      lion.el.style.display = 'block';
-      lion.el.style.left = lx + 'px';
-      lion.el.style.top  = ly + 'px';
-    }
-
-    function killLion(lion) {
-      lion.dead = true;
-      lion.el.style.display = 'none';
-      lion.respawnTimeout = setTimeout(() => placeLionAtEdge(lion), 5000);
-    }
-
-    // ── 파워업 ─────────────────────────────────────────────
-    function activatePower() {
-      powered = true;
-      gorillaEl.classList.add('powered');
-      let sec = 10;
-      countdownEl.textContent = sec;
-      powerTimerEl.style.display = 'block';
-      clearTimeout(powerTimeout);
-      clearInterval(powerInterval);
-      powerInterval = setInterval(() => {
-        sec--;
-        countdownEl.textContent = sec;
-        if (sec <= 0) clearInterval(powerInterval);
-      }, 1000);
-      powerTimeout = setTimeout(() => {
-        powered = false;
-        gorillaEl.classList.remove('powered');
-        powerTimerEl.style.display = 'none';
-      }, 10000);
-    }
-
-    // ── 충돌 검사 ──────────────────────────────────────────
-    function overlap(a, b) {
-      return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-    }
-
-    function checkCollisions() {
-      const gr = gorillaEl.getBoundingClientRect();
-
-      // 바나나
-      for (let i = bananas.length - 1; i >= 0; i--) {
-        if (!overlap(gr, bananas[i].el.getBoundingClientRect())) continue;
-        const { isRed } = bananas[i];
-        bananas[i].el.remove();
-        bananas.splice(i, 1);
-
-        if (isRed) {
-          activatePower();
-        } else {
-          score += 10;
-          scoreEl.textContent = '점수: ' + score;
-        }
-
-        if (bananas.filter(b => !b.isRed).length === 0 && !paused) {
-          triggerWin(); return;
-        }
-      }
-
-      // 사자
-      for (const lion of lions) {
-        if (lion.dead) continue;
-        if (!overlap(gr, lion.el.getBoundingClientRect())) continue;
-        if (powered) {
-          killLion(lion);
-        } else {
-          triggerGameOver(); return;
-        }
-      }
-    }
-
-    // ── 게임 종료/클리어 ────────────────────────────────────
-    function showMessage(html, onDone) {
-      paused = true;
-      messageBox.innerHTML = html;
-      overlay.classList.add('show');
-      setTimeout(() => { onDone(); }, 3000);
-    }
-
-    function triggerWin() {
-      showMessage(
-        '🎉 바나나를 모두 수집했습니다! 🎉<br>점수: ' + score +
-        '<br><small style="font-size:0.55em">잠시 후 다시 시작...</small>',
-        init
-      );
-    }
-
-    function triggerGameOver() {
-      showMessage(
-        '💀 게임 오버! 💀<br>점수: ' + score +
-        '<br><small style="font-size:0.55em">잠시 후 다시 시작...</small>',
-        init
-      );
-    }
-
-    // ── 입력 ───────────────────────────────────────────────
-    document.addEventListener('keydown', e => {
-      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault();
-      keys[e.key] = true;
-    });
-    document.addEventListener('keyup', e => { keys[e.key] = false; });
-
-    // ── 사자 이동 ──────────────────────────────────────────
-    function moveLions() {
-      for (const lion of lions) {
-        if (lion.dead) continue;
-        const dx = gx - lion.x, dy = gy - lion.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 1) {
-          lion.x += (dx / dist) * LION_SPEED;
-          lion.y += (dy / dist) * LION_SPEED;
-          lion.el.style.left = lion.x + 'px';
-          lion.el.style.top  = lion.y + 'px';
-        }
-      }
-    }
-
-    // ── 게임 루프 ──────────────────────────────────────────
-    function gameLoop() {
-      if (!paused) {
-        if (keys['ArrowLeft'])  gx = Math.max(0, gx - SPEED);
-        if (keys['ArrowRight']) gx = Math.min(window.innerWidth  - 50, gx + SPEED);
-        if (keys['ArrowUp'])    gy = Math.max(0, gy - SPEED);
-        if (keys['ArrowDown'])  gy = Math.min(window.innerHeight - 55, gy + SPEED);
-        gorillaEl.style.left = gx + 'px';
-        gorillaEl.style.top  = gy + 'px';
-        moveLions();
-        checkCollisions();
-      }
-      requestAnimationFrame(gameLoop);
-    }
-
-    init();
-    gameLoop();
-  </script>
 </body>
 </html>
