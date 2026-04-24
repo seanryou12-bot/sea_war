@@ -5,54 +5,162 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>신니의 홈피</title>
   <style>
-    .blink {
-      color: red;
-      font-size: 3em;
-      animation: blink 0.5s step-start infinite;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #5a9e3a;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
     }
-    @keyframes blink {
-      50% { opacity: 0; }
+
+    #score {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2em;
+      font-weight: bold;
+      color: white;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
+      z-index: 100;
     }
 
     #gorilla {
       position: fixed;
-      bottom: 16px;
-      left: 16px;
       font-size: 2.5em;
-      cursor: pointer;
       user-select: none;
-      transition: transform 0.1s;
+      z-index: 10;
     }
 
-    #gorilla.dance {
-      animation: dance 0.4s ease-in-out infinite;
+    .banana {
+      position: fixed;
+      font-size: 2em;
+      user-select: none;
+      z-index: 10;
     }
 
-    @keyframes dance {
-      0%   { transform: translateY(0) rotate(0deg); }
-      20%  { transform: translateY(-30px) rotate(-15deg); }
-      40%  { transform: translateY(0) rotate(0deg); }
-      60%  { transform: translateY(-20px) rotate(15deg); }
-      80%  { transform: translateY(0) rotate(-10deg); }
-      100% { transform: translateY(0) rotate(0deg); }
+    #message {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      font-size: 1.8em;
+      padding: 40px 60px;
+      border-radius: 20px;
+      text-align: center;
+      z-index: 200;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
-  <h1>반갑습니다 여기는 신니의 홈피에요</h1>
-  <h1 class="blink">오늘 전교1등했어요!! 노동현 만세!!</h1>
 
+  <div id="score">점수: 0</div>
   <div id="gorilla">🦍</div>
+  <div id="message"></div>
 
   <script>
     const gorilla = document.getElementById('gorilla');
-    let timer = null;
+    const scoreEl = document.getElementById('score');
+    const messageEl = document.getElementById('message');
 
-    gorilla.addEventListener('click', () => {
-      gorilla.classList.add('dance');
-      clearTimeout(timer);
-      timer = setTimeout(() => gorilla.classList.remove('dance'), 3000);
+    let x = 20;
+    let y = window.innerHeight - 80;
+    let score = 0;
+    let paused = false;
+    const speed = 8;
+    const bananas = [];
+
+    gorilla.style.left = x + 'px';
+    gorilla.style.top = y + 'px';
+
+    function spawnBananas() {
+      document.querySelectorAll('.banana').forEach(b => b.remove());
+      bananas.length = 0;
+
+      const count = Math.floor(Math.random() * 6) + 5;
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'banana';
+        el.textContent = '🍌';
+        const bx = Math.random() * (window.innerWidth - 80) + 20;
+        const by = Math.random() * (window.innerHeight - 120) + 70;
+        el.style.left = bx + 'px';
+        el.style.top = by + 'px';
+        document.body.appendChild(el);
+        bananas.push({ el, x: bx, y: by });
+      }
+    }
+
+    function checkCollision() {
+      const gRect = gorilla.getBoundingClientRect();
+      for (let i = bananas.length - 1; i >= 0; i--) {
+        const bRect = bananas[i].el.getBoundingClientRect();
+        if (
+          gRect.left < bRect.right &&
+          gRect.right > bRect.left &&
+          gRect.top < bRect.bottom &&
+          gRect.bottom > bRect.top
+        ) {
+          bananas[i].el.remove();
+          bananas.splice(i, 1);
+          score += 10;
+          scoreEl.textContent = '점수: ' + score;
+
+          if (score >= 50) {
+            paused = true;
+            messageEl.innerHTML = '🎉 축하합니다! 50점 달성! 🎉<br><small style="font-size:0.6em">잠시 후 게임을 다시 시작합니다...</small>';
+            messageEl.style.display = 'block';
+            setTimeout(() => {
+              score = 0;
+              scoreEl.textContent = '점수: 0';
+              x = 20;
+              y = window.innerHeight - 80;
+              gorilla.style.left = x + 'px';
+              gorilla.style.top = y + 'px';
+              messageEl.style.display = 'none';
+              spawnBananas();
+              paused = false;
+            }, 3000);
+          }
+        }
+      }
+    }
+
+    const keys = {};
+
+    document.addEventListener('keydown', e => {
+      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+        e.preventDefault();
+      }
+      keys[e.key] = true;
     });
+
+    document.addEventListener('keyup', e => {
+      keys[e.key] = false;
+    });
+
+    function gameLoop() {
+      if (!paused) {
+        if (keys['ArrowLeft'])  x = Math.max(0, x - speed);
+        if (keys['ArrowRight']) x = Math.min(window.innerWidth - 50, x + speed);
+        if (keys['ArrowUp'])    y = Math.max(0, y - speed);
+        if (keys['ArrowDown'])  y = Math.min(window.innerHeight - 55, y + speed);
+
+        gorilla.style.left = x + 'px';
+        gorilla.style.top = y + 'px';
+
+        checkCollision();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    spawnBananas();
+    gameLoop();
   </script>
 </body>
 </html>
