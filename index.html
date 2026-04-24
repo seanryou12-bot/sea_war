@@ -13,10 +13,46 @@
     @keyframes blink {
       50% { opacity: 0; }
     }
+
+    #gorilla {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      font-size: 2.5em;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.1s;
+    }
+
+    #gorilla.dance {
+      animation: dance 0.4s ease-in-out infinite;
+    }
+
+    @keyframes dance {
+      0%   { transform: translateY(0) rotate(0deg); }
+      20%  { transform: translateY(-30px) rotate(-15deg); }
+      40%  { transform: translateY(0) rotate(0deg); }
+      60%  { transform: translateY(-20px) rotate(15deg); }
+      80%  { transform: translateY(0) rotate(-10deg); }
+      100% { transform: translateY(0) rotate(0deg); }
+    }
   </style>
 </head>
 <body>
   <h1>반갑습니다 여기는 신니의 홈피에요</h1>
   <h1 class="blink">오늘 전교1등했어요!! 노동현 만세!!</h1>
+
+  <div id="gorilla">🦍</div>
+
+  <script>
+    const gorilla = document.getElementById('gorilla');
+    let timer = null;
+
+    gorilla.addEventListener('click', () => {
+      gorilla.classList.add('dance');
+      clearTimeout(timer);
+      timer = setTimeout(() => gorilla.classList.remove('dance'), 3000);
+    });
+  </script>
 </body>
 </html>
