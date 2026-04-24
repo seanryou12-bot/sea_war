@@ -3,27 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>신니의 홈피</title>
+  <title>신니의 홈피 - 고릴라 게임</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #5a9e3a;
+      background: #4a8c2a;
       overflow: hidden;
       height: 100vh;
       width: 100vw;
     }
 
-    #score {
+    #hud {
       position: fixed;
       top: 16px;
       left: 50%;
       transform: translateX(-50%);
+      text-align: center;
+      z-index: 100;
+    }
+
+    #score {
       font-size: 2em;
       font-weight: bold;
       color: white;
-      text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
-      z-index: 100;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+    }
+
+    #power-timer {
+      font-size: 1.1em;
+      color: #ffe44d;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.9);
+      display: none;
+      margin-top: 4px;
     }
 
     #gorilla {
@@ -31,6 +43,11 @@
       font-size: 2.5em;
       user-select: none;
       z-index: 10;
+      transition: font-size 0.3s ease;
+    }
+
+    #gorilla.powered {
+      font-size: 5em;
     }
 
     .banana {
@@ -40,126 +57,281 @@
       z-index: 10;
     }
 
-    #message {
+    .banana.red {
+      filter: hue-rotate(300deg) saturate(4) brightness(1.1);
+      animation: pulse 0.7s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+
+    .lion {
+      position: fixed;
+      font-size: 2.5em;
+      user-select: none;
+      z-index: 10;
+    }
+
+    #overlay {
       display: none;
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.85);
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #overlay.show { display: flex; }
+
+    #message-box {
+      background: rgba(0,0,0,0.9);
       color: white;
       font-size: 1.8em;
       padding: 40px 60px;
       border-radius: 20px;
       text-align: center;
-      z-index: 200;
-      line-height: 1.6;
+      line-height: 1.8;
     }
   </style>
 </head>
 <body>
 
-  <div id="score">점수: 0</div>
+  <div id="hud">
+    <div id="score">점수: 0</div>
+    <div id="power-timer">⚡ 파워업! <span id="countdown">10</span>초</div>
+  </div>
+
   <div id="gorilla">🦍</div>
-  <div id="message"></div>
+
+  <div id="overlay">
+    <div id="message-box"></div>
+  </div>
 
   <script>
-    const gorilla = document.getElementById('gorilla');
-    const scoreEl = document.getElementById('score');
-    const messageEl = document.getElementById('message');
+    const gorillaEl   = document.getElementById('gorilla');
+    const scoreEl     = document.getElementById('score');
+    const powerTimerEl = document.getElementById('power-timer');
+    const countdownEl = document.getElementById('countdown');
+    const overlay     = document.getElementById('overlay');
+    const messageBox  = document.getElementById('message-box');
 
-    let x = 20;
-    let y = window.innerHeight - 80;
+    const SPEED       = 8;
+    const LION_SPEED  = 1.8;
+
+    let gx = 60, gy = window.innerHeight - 80;
     let score = 0;
     let paused = false;
-    const speed = 8;
+    let powered = false;
+    let powerTimeout = null;
+    let powerInterval = null;
+
     const bananas = [];
+    const lions   = [];
+    const keys    = {};
 
-    gorilla.style.left = x + 'px';
-    gorilla.style.top = y + 'px';
+    // ── 초기 배치 ──────────────────────────────────────────
+    function init() {
+      paused  = false;
+      score   = 0;
+      powered = false;
+      gx = 60; gy = window.innerHeight - 80;
+      gorillaEl.style.left = gx + 'px';
+      gorillaEl.style.top  = gy + 'px';
+      gorillaEl.classList.remove('powered');
+      scoreEl.textContent = '점수: 0';
+      powerTimerEl.style.display = 'none';
+      clearTimeout(powerTimeout);
+      clearInterval(powerInterval);
+      overlay.classList.remove('show');
+      spawnBananas();
+      resetLions();
+    }
 
+    // ── 바나나 ─────────────────────────────────────────────
     function spawnBananas() {
-      document.querySelectorAll('.banana').forEach(b => b.remove());
+      bananas.forEach(b => b.el.remove());
       bananas.length = 0;
 
       const count = Math.floor(Math.random() * 6) + 5;
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < count; i++) addBanana(false);
+      addBanana(true); // 빨간 바나나 1개
+    }
+
+    function addBanana(isRed) {
+      const el = document.createElement('div');
+      el.className = 'banana' + (isRed ? ' red' : '');
+      el.textContent = '🍌';
+      let bx, by;
+      do {
+        bx = Math.random() * (window.innerWidth  - 80) + 20;
+        by = Math.random() * (window.innerHeight - 130) + 80;
+      } while (Math.hypot(bx - gx, by - gy) < 120);
+      el.style.left = bx + 'px';
+      el.style.top  = by + 'px';
+      document.body.appendChild(el);
+      bananas.push({ el, x: bx, y: by, isRed });
+    }
+
+    // ── 사자 ───────────────────────────────────────────────
+    function resetLions() {
+      lions.forEach(l => { clearTimeout(l.respawnTimeout); l.el.remove(); });
+      lions.length = 0;
+      for (let i = 0; i < 2; i++) {
         const el = document.createElement('div');
-        el.className = 'banana';
-        el.textContent = '🍌';
-        const bx = Math.random() * (window.innerWidth - 80) + 20;
-        const by = Math.random() * (window.innerHeight - 120) + 70;
-        el.style.left = bx + 'px';
-        el.style.top = by + 'px';
+        el.className = 'lion';
+        el.textContent = '🦁';
         document.body.appendChild(el);
-        bananas.push({ el, x: bx, y: by });
+        const lion = { el, x: 0, y: 0, dead: false, respawnTimeout: null };
+        lions.push(lion);
+        placeLionAtEdge(lion);
       }
     }
 
-    function checkCollision() {
-      const gRect = gorilla.getBoundingClientRect();
+    function placeLionAtEdge(lion) {
+      const edge = Math.floor(Math.random() * 4);
+      let lx, ly;
+      if      (edge === 0) { lx = 0;                       ly = Math.random() * window.innerHeight; }
+      else if (edge === 1) { lx = window.innerWidth  - 50; ly = Math.random() * window.innerHeight; }
+      else if (edge === 2) { lx = Math.random() * window.innerWidth; ly = 0; }
+      else                 { lx = Math.random() * window.innerWidth; ly = window.innerHeight - 55; }
+      lion.x = lx; lion.y = ly;
+      lion.dead = false;
+      lion.el.style.display = 'block';
+      lion.el.style.left = lx + 'px';
+      lion.el.style.top  = ly + 'px';
+    }
+
+    function killLion(lion) {
+      lion.dead = true;
+      lion.el.style.display = 'none';
+      lion.respawnTimeout = setTimeout(() => placeLionAtEdge(lion), 5000);
+    }
+
+    // ── 파워업 ─────────────────────────────────────────────
+    function activatePower() {
+      powered = true;
+      gorillaEl.classList.add('powered');
+      let sec = 10;
+      countdownEl.textContent = sec;
+      powerTimerEl.style.display = 'block';
+      clearTimeout(powerTimeout);
+      clearInterval(powerInterval);
+      powerInterval = setInterval(() => {
+        sec--;
+        countdownEl.textContent = sec;
+        if (sec <= 0) clearInterval(powerInterval);
+      }, 1000);
+      powerTimeout = setTimeout(() => {
+        powered = false;
+        gorillaEl.classList.remove('powered');
+        powerTimerEl.style.display = 'none';
+      }, 10000);
+    }
+
+    // ── 충돌 검사 ──────────────────────────────────────────
+    function overlap(a, b) {
+      return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    }
+
+    function checkCollisions() {
+      const gr = gorillaEl.getBoundingClientRect();
+
+      // 바나나
       for (let i = bananas.length - 1; i >= 0; i--) {
-        const bRect = bananas[i].el.getBoundingClientRect();
-        if (
-          gRect.left < bRect.right &&
-          gRect.right > bRect.left &&
-          gRect.top < bRect.bottom &&
-          gRect.bottom > bRect.top
-        ) {
-          bananas[i].el.remove();
-          bananas.splice(i, 1);
+        if (!overlap(gr, bananas[i].el.getBoundingClientRect())) continue;
+        const { isRed } = bananas[i];
+        bananas[i].el.remove();
+        bananas.splice(i, 1);
+
+        if (isRed) {
+          activatePower();
+        } else {
           score += 10;
           scoreEl.textContent = '점수: ' + score;
+        }
 
-          if (score >= 50) {
-            paused = true;
-            messageEl.innerHTML = '🎉 축하합니다! 50점 달성! 🎉<br><small style="font-size:0.6em">잠시 후 게임을 다시 시작합니다...</small>';
-            messageEl.style.display = 'block';
-            setTimeout(() => {
-              score = 0;
-              scoreEl.textContent = '점수: 0';
-              x = 20;
-              y = window.innerHeight - 80;
-              gorilla.style.left = x + 'px';
-              gorilla.style.top = y + 'px';
-              messageEl.style.display = 'none';
-              spawnBananas();
-              paused = false;
-            }, 3000);
-          }
+        if (bananas.filter(b => !b.isRed).length === 0 && !paused) {
+          triggerWin(); return;
+        }
+      }
+
+      // 사자
+      for (const lion of lions) {
+        if (lion.dead) continue;
+        if (!overlap(gr, lion.el.getBoundingClientRect())) continue;
+        if (powered) {
+          killLion(lion);
+        } else {
+          triggerGameOver(); return;
         }
       }
     }
 
-    const keys = {};
+    // ── 게임 종료/클리어 ────────────────────────────────────
+    function showMessage(html, onDone) {
+      paused = true;
+      messageBox.innerHTML = html;
+      overlay.classList.add('show');
+      setTimeout(() => { onDone(); }, 3000);
+    }
 
+    function triggerWin() {
+      showMessage(
+        '🎉 바나나를 모두 수집했습니다! 🎉<br>점수: ' + score +
+        '<br><small style="font-size:0.55em">잠시 후 다시 시작...</small>',
+        init
+      );
+    }
+
+    function triggerGameOver() {
+      showMessage(
+        '💀 게임 오버! 💀<br>점수: ' + score +
+        '<br><small style="font-size:0.55em">잠시 후 다시 시작...</small>',
+        init
+      );
+    }
+
+    // ── 입력 ───────────────────────────────────────────────
     document.addEventListener('keydown', e => {
-      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
-        e.preventDefault();
-      }
+      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault();
       keys[e.key] = true;
     });
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
 
-    document.addEventListener('keyup', e => {
-      keys[e.key] = false;
-    });
+    // ── 사자 이동 ──────────────────────────────────────────
+    function moveLions() {
+      for (const lion of lions) {
+        if (lion.dead) continue;
+        const dx = gx - lion.x, dy = gy - lion.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 1) {
+          lion.x += (dx / dist) * LION_SPEED;
+          lion.y += (dy / dist) * LION_SPEED;
+          lion.el.style.left = lion.x + 'px';
+          lion.el.style.top  = lion.y + 'px';
+        }
+      }
+    }
 
+    // ── 게임 루프 ──────────────────────────────────────────
     function gameLoop() {
       if (!paused) {
-        if (keys['ArrowLeft'])  x = Math.max(0, x - speed);
-        if (keys['ArrowRight']) x = Math.min(window.innerWidth - 50, x + speed);
-        if (keys['ArrowUp'])    y = Math.max(0, y - speed);
-        if (keys['ArrowDown'])  y = Math.min(window.innerHeight - 55, y + speed);
-
-        gorilla.style.left = x + 'px';
-        gorilla.style.top = y + 'px';
-
-        checkCollision();
+        if (keys['ArrowLeft'])  gx = Math.max(0, gx - SPEED);
+        if (keys['ArrowRight']) gx = Math.min(window.innerWidth  - 50, gx + SPEED);
+        if (keys['ArrowUp'])    gy = Math.max(0, gy - SPEED);
+        if (keys['ArrowDown'])  gy = Math.min(window.innerHeight - 55, gy + SPEED);
+        gorillaEl.style.left = gx + 'px';
+        gorillaEl.style.top  = gy + 'px';
+        moveLions();
+        checkCollisions();
       }
       requestAnimationFrame(gameLoop);
     }
 
-    spawnBananas();
+    init();
     gameLoop();
   </script>
 </body>
